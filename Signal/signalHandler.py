@@ -27,6 +27,7 @@ class SignalInfo:
                 content = file.read()
         except FileNotFoundError:
             content = None
+            wx.MessageBox("Signal目录下未找到SignalHadrwareAddr.ini配置文件", wx.OK, None)
         if content is not None:
             for line in content.split('\n'):
                 addr = line.split('[')[1][:-1]
@@ -39,13 +40,13 @@ class SignalTool:
         self.signalCMD = SignalCMD()
         self.signalInfo = SignalInfo()
 
-    def getIsConnected(self):
+    def GetConnectStatus(self) -> bool:
         if self.signalObject is not None:
             return True
         else:
             return False
 
-    def toConnect(self):
+    def DoConnect(self):
         """连接信号发生器"""
         signalInfo = SignalInfo()
         for hwAddr in signalInfo.signalHWAddrs:
@@ -57,7 +58,7 @@ class SignalTool:
         if self.signalObject is None:
             return False
 
-    def sendSignalCmd(self, cmd):
+    def SendSignalCmd(self, cmd):
         try:
             self.signalObject.write(cmd)
         except:
