@@ -6,9 +6,9 @@ class ComPort:
     def __init__(self):
         self.comPorts = []
         self.serialHandler = serial.Serial()
-        self.comPortInit()
+        self.InitComPort()
 
-    def comPortInit(self):
+    def InitComPort(self):
         self.comPorts.clear()
         coms = sorted(serialTools.comports())
         idx = 0

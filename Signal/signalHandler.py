@@ -1,8 +1,9 @@
+import re
+
 import pyvisa
 from Signal.signalCmd import *
 # from signalCmd import *
 import wx
-
 
 # 信号发生器地址
 usb_addr1 = 'USB0::0x1AB1::0x0642::DG1ZA201902214::INSTR'  # 编号为 GEN_007
@@ -11,26 +12,35 @@ usb_addr2 = 'USB0::0x1AB1::0x0642::DG1ZA212302446::INST1R'  # 编号为 AF2014
 visa_dll = 'c:/windows/system32/visa32.dll'
 
 
-class SignalCMD:
-    Beep = ':SYSTem: BEEPer:IMMediate'
-    Output1On = ':OUTPUT1 ON'
-    Output1Off = ':OUTPUT1 OFF'
-
-
 class SignalInfo:
     def __init__(self):
         self.signalHWAddrs = []
-        self.signalHWAddrs.append(usb_addr1)
-        self.signalHWAddrs.append(usb_addr2)
+        self.OpenSignalAddr()
+        self.__signalNowAddr = ''
+
+    def OpenSignalAddr(self):
+        """打开SignalHadrwareAddr.ini中的信号发生器地址"""
+        addr_pattern = re.compile(r'[\[](.*?)[\]]', re.S)
         try:
             with open('./Signal/SignalHadrwareAddr.ini', encoding='utf-8') as file:
-                content = file.read()
+                content = file.readlines()
         except FileNotFoundError:
             content = None
             wx.MessageBox("Signal目录下未找到SignalHadrwareAddr.ini配置文件", wx.OK, None)
         if content is not None:
-            for line in content.split('\n'):
-                addr = line.split('[')[1][:-1]
+            for line in content:
+                try:
+                    addr = re.findall(addr_pattern, line)[0]
+                except IndexError:
+                    wx.MessageBox("SignalHadrwareAddr.ini配置文件中的信号发生器地址格式异常！", wx.OK)
+                    return
+                self.signalHWAddrs.append(addr)
+
+    def SetNowAddr(self, addr):
+        self.__signalNowAddr = addr
+
+    def GetNowAddr(self, addr):
+        return self.__signalNowAddr
 
 
 class SignalTool:
@@ -46,17 +56,18 @@ class SignalTool:
         else:
             return False
 
-    def DoConnect(self):
+    def DoConnect(self) -> bool:
         """连接信号发生器"""
         signalInfo = SignalInfo()
         for hwAddr in signalInfo.signalHWAddrs:
             try:
                 self.signalObject = self.rm.open_resource(hwAddr)  # 遍历所有信号发生器地址
+                self.signalInfo.SetNowAddr(hwAddr)
                 return True
-            except:
+            except pyvisa.errors.VisaIOError:
                 self.signalObject = None
-        if self.signalObject is None:
-            return False
+                return False
+        del signalInfo
 
     def SendSignalCmd(self, cmd):
         try:

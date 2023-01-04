@@ -1,5 +1,4 @@
-SIGNAL_CMD = {
-    'OUTPUT1ON': ':OUTPUT1 ON',
-    'OUTPUT1OFF': ':OUTPUT1 OFF',
-    'BEEP': ':SYSTem: BEEPer:IMMediate',
-}
+class SignalCMD:
+    Beep = ':SYSTem: BEEPer:IMMediate'
+    Output1On = ':OUTPUT1 ON'
+    Output1Off = ':OUTPUT1 OFF'
