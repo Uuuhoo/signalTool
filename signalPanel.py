@@ -1,5 +1,6 @@
 import re
 
+import serial
 import wx
 
 import Port.comPort as ComPort
@@ -13,6 +14,12 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         GuiSignal.signalToolMainPanel.__init__(self, parent)
         self.mainFrame = parent
         self.signalCMD = signalCMD.SignalCMD
+        self.m_comDlg = ComPort.ComPort()
+        self.PortInit()
+
+    def PortInit(self):
+        self.m_ccMiddlePort.SetItems(list(self.m_comDlg.comPorts.keys()))
+        self.m_ccMiddlePort.SetSelection(0)
 
     def OnButtonSignalConnectClick(self, event) -> None:
         """连接信号发生器"""
@@ -26,10 +33,43 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         event.Skip()
 
     def OnButtonMiddleConnectClick(self, event):
-        comPort = ComPort.ComPort()
-        self.m_ccMiddlePort.SetItems(comPort.comPorts)
-        # comPort.comPorts
+        """连接主控点击事件"""
+        self.ConnectMainControl()
         event.Skip()
+
+    def ConnectMainControl(self):
+        """连接主控"""
+        port = self.m_comDlg.comPorts.get(self.m_ccMiddlePort.GetStringSelection())
+        baud = int(self.m_ccMiddleBaud.GetStringSelection())
+        bitsize = self.m_ccMiddleDBitNum.GetStringSelection()
+        check = self.m_ccMiddleCheck.GetStringSelection()
+        check = 'N'  # 固定不校验
+        stopsize = self.m_ccMiddleStopBit.GetStringSelection()
+
+        Parity = {'None': 'N', 'Even': 'E', 'Odd': 'O'}
+        DataBits = {'5': 5, '6': 6, '7': 7, '8': 8}
+        StopBits = {'1': 1, '1.5': 1.5, '2': 2}
+        self.m_comDlg.serialHandler.close()
+        wx.MilliSleep(50)
+
+        self.m_comDlg.serialHandler.port = port
+        self.m_comDlg.serialHandler.baudrate = baud
+        self.m_comDlg.serialHandler.parity = Parity[check]
+        self.m_comDlg.serialHandler.bytesize = DataBits[bitsize]
+        self.m_comDlg.serialHandler.stopbits = StopBits[stopsize]
+        self.m_comDlg.timeout = 0
+
+        if self.m_btn_MiddleConnect.GetLabel() == "连接主控":
+            try:
+                self.m_comDlg.serialHandler.open()
+                wx.MilliSleep(50)
+            except serial.SerialException:
+                wx.MessageBox("打开 " + self.m_comDlg.serialHandler.port + "失败！", "警告！", wx.OK)
+                return
+            self.m_btn_MiddleConnect.SetLabelText("断开主控")
+        elif self.m_btn_MiddleConnect.GetLabel() == "断开主控":
+            self.m_comDlg.serialHandler.close()
+            self.m_btn_MiddleConnect.SetLabelText("连接主控")
 
     def OnButtonClearTestResultClick(self, event):
 
@@ -77,7 +117,10 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         event.Skip()
 
     def OnButtonAddTestCaseClick(self, event):
-
+        """添加测试项"""
+        if self.m_ckBoxIsVariable.GetValue():
+            """有可变测试项"""
+            # self
         event.Skip()
 
     def OnButtonClearTestCaseClick(self, event):
@@ -105,4 +148,8 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             self.m_staticTextStepUint.SetLabelText(declineUint)
         event.Skip()
 
-
+    def OnTestCaseDClick(self, event):
+        """测试项双击,删除测试项"""
+        eventObeject = event.GetEventObject()
+        eventObeject.Delete(eventObeject.GetSelection())
+        event.Skip()
