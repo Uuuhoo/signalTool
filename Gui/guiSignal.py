@@ -40,7 +40,7 @@ class mainFrame ( wx.Frame ):
 
 class signalToolMainPanel ( wx.Panel ):
 
-	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 799,638 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
+	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 799,624 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
 		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
 		OutterSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -49,10 +49,14 @@ class signalToolMainPanel ( wx.Panel ):
 
 		leftUpSizer = wx.BoxSizer( wx.HORIZONTAL )
 
-		sbSizerTestItems = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, u"测试项" ), wx.VERTICAL )
+		sbSizerTestCase = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, u"测试项" ), wx.VERTICAL )
+
+		m_listTestCaseChoices = [ u"很大声的", u"大萨达撒" ]
+		self.m_listTestCase = wx.ListBox( sbSizerTestCase.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_listTestCaseChoices, 0 )
+		sbSizerTestCase.Add( self.m_listTestCase, 1, wx.EXPAND|wx.ALL, 5 )
 
 
-		leftUpSizer.Add( sbSizerTestItems, 1, wx.EXPAND, 5 )
+		leftUpSizer.Add( sbSizerTestCase, 1, wx.EXPAND, 5 )
 
 		sbSizerComPortSet = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, u"连接配置" ), wx.VERTICAL )
 
@@ -65,17 +69,17 @@ class signalToolMainPanel ( wx.Panel ):
 
 		gSizerSignalHandler.Add( self.signalname, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
-		self.m_textSignalname = wx.TextCtrl( sbSizerSignalComPort.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY )
-		gSizerSignalHandler.Add( self.m_textSignalname, 0, wx.ALL, 5 )
+		self.m_textSignalAddr = wx.TextCtrl( sbSizerSignalComPort.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY )
+		gSizerSignalHandler.Add( self.m_textSignalAddr, 0, wx.ALL, 5 )
 
 
 		sbSizerSignalComPort.Add( gSizerSignalHandler, 1, wx.EXPAND, 5 )
 
 		self.m_btnSignalConnect = wx.Button( sbSizerSignalComPort.GetStaticBox(), wx.ID_ANY, u"连接信号发生器", wx.DefaultPosition, wx.DefaultSize, 0 )
-		sbSizerSignalComPort.Add( self.m_btnSignalConnect, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		sbSizerSignalComPort.Add( self.m_btnSignalConnect, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.BOTTOM, 5 )
 
 
-		sbSizerComPortSet.Add( sbSizerSignalComPort, 1, wx.EXPAND, 5 )
+		sbSizerComPortSet.Add( sbSizerSignalComPort, 0, wx.EXPAND, 5 )
 
 		sbSizerMiddleComPort = wx.StaticBoxSizer( wx.StaticBox( sbSizerComPortSet.GetStaticBox(), wx.ID_ANY, u"主控" ), wx.VERTICAL )
 
@@ -84,58 +88,58 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_textMiddlePort = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"端   口：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddlePort.Wrap( -1 )
 
-		gSizerMiddleSet.Add( self.m_textMiddlePort, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_textMiddlePort, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		m_ccMiddlePortChoices = []
 		self.m_ccMiddlePort = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddlePortChoices, 0 )
 		self.m_ccMiddlePort.SetSelection( 0 )
-		gSizerMiddleSet.Add( self.m_ccMiddlePort, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
+		gSizerMiddleSet.Add( self.m_ccMiddlePort, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
 
 		self.m_textMiddleBaud = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"波特率：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddleBaud.Wrap( -1 )
 
-		gSizerMiddleSet.Add( self.m_textMiddleBaud, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		gSizerMiddleSet.Add( self.m_textMiddleBaud, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 		m_ccMiddleBaudChoices = [ u"2400", u"9600", u"19200", u"115200" ]
 		self.m_ccMiddleBaud = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddleBaudChoices, 0 )
-		self.m_ccMiddleBaud.SetSelection( 0 )
-		gSizerMiddleSet.Add( self.m_ccMiddleBaud, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+		self.m_ccMiddleBaud.SetSelection( 1 )
+		gSizerMiddleSet.Add( self.m_ccMiddleBaud, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
 
 		self.m_textMiddleDBitNum = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"数据位：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddleDBitNum.Wrap( -1 )
 
-		gSizerMiddleSet.Add( self.m_textMiddleDBitNum, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_textMiddleDBitNum, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		m_ccMiddleDBitNumChoices = [ u"8", u"9" ]
 		self.m_ccMiddleDBitNum = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddleDBitNumChoices, 0 )
 		self.m_ccMiddleDBitNum.SetSelection( 0 )
-		gSizerMiddleSet.Add( self.m_ccMiddleDBitNum, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_ccMiddleDBitNum, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		self.m_textMiddleCheck = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"校验位：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddleCheck.Wrap( -1 )
 
-		gSizerMiddleSet.Add( self.m_textMiddleCheck, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_textMiddleCheck, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		m_ccMiddleCheckChoices = [ u"无", u"奇校验", u"偶校验" ]
 		self.m_ccMiddleCheck = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddleCheckChoices, 0 )
-		self.m_ccMiddleCheck.SetSelection( 0 )
-		gSizerMiddleSet.Add( self.m_ccMiddleCheck, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+		self.m_ccMiddleCheck.SetSelection( 1 )
+		gSizerMiddleSet.Add( self.m_ccMiddleCheck, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		self.m_textMiddleBaud21 = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"停止位：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddleBaud21.Wrap( -1 )
 
-		gSizerMiddleSet.Add( self.m_textMiddleBaud21, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_textMiddleBaud21, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		m_ccMiddleStopBitChoices = [ u"1", u"1.5", u"2" ]
 		self.m_ccMiddleStopBit = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddleStopBitChoices, 0 )
 		self.m_ccMiddleStopBit.SetSelection( 0 )
-		gSizerMiddleSet.Add( self.m_ccMiddleStopBit, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerMiddleSet.Add( self.m_ccMiddleStopBit, 1, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-		sbSizerMiddleComPort.Add( gSizerMiddleSet, 1, 0, 2 )
+		sbSizerMiddleComPort.Add( gSizerMiddleSet, 1, wx.EXPAND, 2 )
 
 		self.m_btn_MiddleConnect = wx.Button( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"连接主控", wx.DefaultPosition, wx.DefaultSize, 0 )
-		sbSizerMiddleComPort.Add( self.m_btn_MiddleConnect, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP|wx.BOTTOM, 5 )
+		sbSizerMiddleComPort.Add( self.m_btn_MiddleConnect, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 5 )
 
 
 		sbSizerComPortSet.Add( sbSizerMiddleComPort, 0, wx.EXPAND, 5 )
@@ -144,17 +148,43 @@ class signalToolMainPanel ( wx.Panel ):
 		leftUpSizer.Add( sbSizerComPortSet, 1, wx.EXPAND, 5 )
 
 
-		leftInfoSizerMain.Add( leftUpSizer, 2, wx.EXPAND, 5 )
+		leftInfoSizerMain.Add( leftUpSizer, 0, wx.EXPAND, 5 )
 
 		leftMidSizer = wx.BoxSizer( wx.VERTICAL )
 
 		sbSizerFuncs = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, u"功能区" ), wx.VERTICAL )
 
+		gSizerControl = wx.GridSizer( 1, 4, 0, 0 )
+
+		self.m_btnClearResult = wx.Button( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, u"清空结果", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerControl.Add( self.m_btnClearResult, 0, wx.LEFT, 5 )
+
+		self.m_btnStartTest = wx.Button( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, u"开始测试", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerControl.Add( self.m_btnStartTest, 0, 0, 5 )
+
+		self.m_btnStopTest = wx.Button( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, u"停止测试", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerControl.Add( self.m_btnStopTest, 0, 0, 5 )
+
+		self.m_btnOpenResultFolder = wx.Button( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, u"打开测试结果", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerControl.Add( self.m_btnOpenResultFolder, 0, 0, 5 )
+
+
+		sbSizerFuncs.Add( gSizerControl, 1, wx.EXPAND, 5 )
+
+		bSizerProgress = wx.BoxSizer( wx.VERTICAL )
+
+		self.m_gauge1 = wx.Gauge( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, 100, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL )
+		self.m_gauge1.SetValue( 0 )
+		bSizerProgress.Add( self.m_gauge1, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5 )
+
+
+		sbSizerFuncs.Add( bSizerProgress, 0, wx.EXPAND, 5 )
+
 
 		leftMidSizer.Add( sbSizerFuncs, 1, wx.EXPAND, 5 )
 
 
-		leftInfoSizerMain.Add( leftMidSizer, 1, wx.EXPAND, 5 )
+		leftInfoSizerMain.Add( leftMidSizer, 0, wx.EXPAND, 5 )
 
 		leftBottomSize = wx.BoxSizer( wx.VERTICAL )
 
@@ -166,14 +196,14 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_resultGrid.CreateGrid( 5, 4 )
 		self.m_resultGrid.EnableEditing( True )
 		self.m_resultGrid.EnableGridLines( True )
-		self.m_resultGrid.EnableDragGridSize( False )
+		self.m_resultGrid.EnableDragGridSize( True )
 		self.m_resultGrid.SetMargins( 0, 0 )
 
 		# Columns
 		self.m_resultGrid.SetColSize( 0, 85 )
 		self.m_resultGrid.SetColSize( 1, 88 )
-		self.m_resultGrid.SetColSize( 2, 128 )
-		self.m_resultGrid.SetColSize( 3, 118 )
+		self.m_resultGrid.SetColSize( 2, 114 )
+		self.m_resultGrid.SetColSize( 3, 110 )
 		self.m_resultGrid.EnableDragColMove( False )
 		self.m_resultGrid.EnableDragColSize( True )
 		self.m_resultGrid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
@@ -192,7 +222,7 @@ class signalToolMainPanel ( wx.Panel ):
 		leftBottomSize.Add( sbSizerResult, 1, wx.EXPAND, 5 )
 
 
-		leftInfoSizerMain.Add( leftBottomSize, 3, wx.EXPAND, 5 )
+		leftInfoSizerMain.Add( leftBottomSize, 4, wx.EXPAND, 5 )
 
 
 		OutterSizer.Add( leftInfoSizerMain, 3, wx.EXPAND, 5 )
@@ -210,51 +240,167 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_radioHighVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"高电平", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioHighVol.Enable( False )
+
 		setSizer.Add( self.m_radioHighVol, 0, wx.ALL, 5 )
 
 		self.m_radioLowVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"低电平", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioLowVol.Enable( False )
+
 		setSizer.Add( self.m_radioLowVol, 0, wx.ALL, 5 )
 
 		self.m_radioRiseTime = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"上升时间", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioRiseTime.Enable( False )
+
 		setSizer.Add( self.m_radioRiseTime, 0, wx.ALL, 5 )
 
 		self.m_radioDeclineTime = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"下降时间", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioDeclineTime.Enable( False )
+
 		setSizer.Add( self.m_radioDeclineTime, 0, wx.ALL, 5 )
 
 
-		sbSizerSignalSet.Add( setSizer, 1, wx.EXPAND, 5 )
+		sbSizerSignalSet.Add( setSizer, 0, wx.EXPAND, 5 )
 
-		setSizer1 = wx.GridSizer( 4, 3, 0, 0 )
+		self.m_staticline1 = wx.StaticLine( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		sbSizerSignalSet.Add( self.m_staticline1, 0, wx.EXPAND |wx.ALL, 5 )
+
+		setSizer1 = wx.GridSizer( 8, 3, 0, 0 )
 
 		self.m_staticTextMinValueLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"最小值：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticTextMinValueLabel.Wrap( -1 )
 
 		setSizer1.Add( self.m_staticTextMinValueLabel, 0, wx.ALL, 5 )
 
-		self.m_textMinValue = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_textMinValue = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"0", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_textMinValue.Enable( False )
+
 		setSizer1.Add( self.m_textMinValue, 0, wx.ALL, 5 )
 
-		self.m_staticTextMinValue = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/ms", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticTextMinValue.Wrap( -1 )
+		self.m_staticTextMinValueUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextMinValueUint.Wrap( -1 )
 
-		setSizer1.Add( self.m_staticTextMinValue, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+		setSizer1.Add( self.m_staticTextMinValueUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextStepLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"步长：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextStepLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextStepLabel, 0, wx.ALL, 5 )
+
+		self.m_textStep = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"10", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_textStep.Enable( False )
+
+		setSizer1.Add( self.m_textStep, 0, wx.ALL, 5 )
+
+		self.m_staticTextStepUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextStepUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextStepUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextHighVolLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"高电平：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextHighVolLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextHighVolLabel, 0, wx.ALL, 5 )
+
+		self.m_textHighVol = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"5000", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textHighVol, 0, wx.ALL, 5 )
+
+		self.m_staticHighVolUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticHighVolUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticHighVolUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextLowVolLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"低电平：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextLowVolLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextLowVolLabel, 0, wx.ALL, 5 )
+
+		self.m_textLowVol = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"1200", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textLowVol, 0, wx.ALL, 5 )
+
+		self.m_staticTextLowVolUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextLowVolUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextLowVolUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticRiseTimeLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"上升时间：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticRiseTimeLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticRiseTimeLabel, 0, wx.ALL, 5 )
+
+		self.m_textRiseTime = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"50", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textRiseTime, 0, wx.ALL, 5 )
+
+		m_cbBoxRiseTimeUintChoices = [ u"ns", u"us", u"ms" ]
+		self.m_cbBoxRiseTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, m_cbBoxRiseTimeUintChoices, wx.CB_READONLY )
+		self.m_cbBoxRiseTimeUint.SetSelection( 0 )
+		self.m_cbBoxRiseTimeUint.SetToolTip( u"RiseTimeUint" )
+
+		setSizer1.Add( self.m_cbBoxRiseTimeUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextDeclineTimeLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"下降时间：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextDeclineTimeLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextDeclineTimeLabel, 0, wx.ALL, 5 )
+
+		self.m_textDeclineTime = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"50", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textDeclineTime, 0, wx.ALL, 5 )
+
+		m_cbBoxDeclineTimeUintChoices = [ u"ns", u"us", u"ms" ]
+		self.m_cbBoxDeclineTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, m_cbBoxDeclineTimeUintChoices, wx.CB_READONLY )
+		self.m_cbBoxDeclineTimeUint.SetSelection( 0 )
+		self.m_cbBoxDeclineTimeUint.SetToolTip( u"DeclineTimeUint" )
+
+		setSizer1.Add( self.m_cbBoxDeclineTimeUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextPeriodLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"周期：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextPeriodLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextPeriodLabel, 0, wx.ALL, 5 )
+
+		self.m_textPeriod = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"1000", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textPeriod, 0, wx.ALL, 5 )
+
+		self.m_staticTextPeriodUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextPeriodUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextPeriodUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextTimesLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"循环次数：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextTimesLabel.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextTimesLabel, 0, wx.ALL, 5 )
+
+		self.m_textTimes = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"6", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textTimes, 0, wx.ALL, 5 )
+
+		self.m_staticTextTimesUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"次", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextTimesUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextTimesUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
 
 
-		sbSizerSignalSet.Add( setSizer1, 3, wx.EXPAND, 5 )
+		sbSizerSignalSet.Add( setSizer1, 1, wx.EXPAND, 5 )
+
+		self.m_staticline11 = wx.StaticLine( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		sbSizerSignalSet.Add( self.m_staticline11, 0, wx.EXPAND |wx.ALL, 5 )
 
 		gSizerButton = wx.GridSizer( 0, 2, 0, 0 )
 
 		self.m_btnAddTestCase = wx.Button( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"添加测试条件", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizerButton.Add( self.m_btnAddTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerButton.Add( self.m_btnAddTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 		self.m_btnClearTestCase = wx.Button( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"清空测试条件", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizerButton.Add( self.m_btnClearTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		gSizerButton.Add( self.m_btnClearTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-		self.m_btnLoadTestCase = wx.Button( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"加载本地测试条件", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizerButton.Add( self.m_btnLoadTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		self.m_btnSaveTestCase = wx.Button( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"保存测试条件", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerButton.Add( self.m_btnSaveTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+		self.m_btnLoadTestCase = wx.Button( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"加载测试条件", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizerButton.Add( self.m_btnLoadTestCase, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 
-		sbSizerSignalSet.Add( gSizerButton, 1, wx.EXPAND, 5 )
+		sbSizerSignalSet.Add( gSizerButton, 0, wx.EXPAND, 5 )
 
 
 		rightSetSizerMain.Add( sbSizerSignalSet, 1, wx.EXPAND, 5 )
@@ -267,10 +413,23 @@ class signalToolMainPanel ( wx.Panel ):
 		self.Layout()
 
 		# Connect Events
-		self.m_btnSignalConnect.Bind( wx.EVT_BUTTON, self.OnButtonSignalConnect )
+		self.m_listTestCase.Bind( wx.EVT_LISTBOX_DCLICK, self.OnTestCaseDClick )
+		self.m_btnSignalConnect.Bind( wx.EVT_BUTTON, self.OnButtonSignalConnectClick )
 		self.m_btn_MiddleConnect.Bind( wx.EVT_BUTTON, self.OnButtonMiddleConnectClick )
+		self.m_btnClearResult.Bind( wx.EVT_BUTTON, self.OnButtonClearTestResultClick )
+		self.m_btnStartTest.Bind( wx.EVT_BUTTON, self.OnButtonStartTestClick )
+		self.m_btnStopTest.Bind( wx.EVT_BUTTON, self.OnButtonStopTestClick )
+		self.m_btnOpenResultFolder.Bind( wx.EVT_BUTTON, self.OnButtonOpenResultFolderClick )
+		self.m_ckBoxIsVariable.Bind( wx.EVT_CHECKBOX, self.OnCkVariableParamClick )
+		self.m_radioHighVol.Bind( wx.EVT_RADIOBUTTON, self.OnRadioParamClick )
+		self.m_radioLowVol.Bind( wx.EVT_RADIOBUTTON, self.OnRadioParamClick )
+		self.m_radioRiseTime.Bind( wx.EVT_RADIOBUTTON, self.OnRadioParamClick )
+		self.m_radioDeclineTime.Bind( wx.EVT_RADIOBUTTON, self.OnRadioParamClick )
+		self.m_cbBoxRiseTimeUint.Bind( wx.EVT_COMBOBOX, self.OnTimeUintcbBoxChanged )
+		self.m_cbBoxDeclineTimeUint.Bind( wx.EVT_COMBOBOX, self.OnTimeUintcbBoxChanged )
 		self.m_btnAddTestCase.Bind( wx.EVT_BUTTON, self.OnButtonAddTestCaseClick )
 		self.m_btnClearTestCase.Bind( wx.EVT_BUTTON, self.OnButtonClearTestCaseClick )
+		self.m_btnSaveTestCase.Bind( wx.EVT_BUTTON, self.OnButtonSaveTestCaseClick )
 		self.m_btnLoadTestCase.Bind( wx.EVT_BUTTON, self.OnButtonLoadTestCaseClick )
 
 	def __del__( self ):
@@ -278,16 +437,47 @@ class signalToolMainPanel ( wx.Panel ):
 
 
 	# Virtual event handlers, override them in your derived class
-	def OnButtonSignalConnect( self, event ):
+	def OnTestCaseDClick( self, event ):
+		event.Skip()
+
+	def OnButtonSignalConnectClick( self, event ):
 		event.Skip()
 
 	def OnButtonMiddleConnectClick( self, event ):
 		event.Skip()
 
+	def OnButtonClearTestResultClick( self, event ):
+		event.Skip()
+
+	def OnButtonStartTestClick( self, event ):
+		event.Skip()
+
+	def OnButtonStopTestClick( self, event ):
+		event.Skip()
+
+	def OnButtonOpenResultFolderClick( self, event ):
+		event.Skip()
+
+	def OnCkVariableParamClick( self, event ):
+		event.Skip()
+
+	def OnRadioParamClick( self, event ):
+		event.Skip()
+
+
+
+
+	def OnTimeUintcbBoxChanged( self, event ):
+		event.Skip()
+
+
 	def OnButtonAddTestCaseClick( self, event ):
 		event.Skip()
 
 	def OnButtonClearTestCaseClick( self, event ):
+		event.Skip()
+
+	def OnButtonSaveTestCaseClick( self, event ):
 		event.Skip()
 
 	def OnButtonLoadTestCaseClick( self, event ):

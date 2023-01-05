@@ -39,7 +39,7 @@ class SignalInfo:
     def SetNowAddr(self, addr):
         self.__signalNowAddr = addr
 
-    def GetNowAddr(self, addr):
+    def GetNowAddr(self):
         return self.__signalNowAddr
 
 
