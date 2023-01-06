@@ -97,18 +97,18 @@ class signalToolMainPanel ( wx.Panel ):
 		sbSizerMiddleComPort = wx.StaticBoxSizer( wx.StaticBox( sbSizerComPortSet.GetStaticBox(), wx.ID_ANY, u"主控" ), wx.VERTICAL )
 
 		fgSizerPortSet = wx.FlexGridSizer( 0, 2, 0, 0 )
-		fgSizerPortSet.SetFlexibleDirection( wx.BOTH )
+		fgSizerPortSet.SetFlexibleDirection( wx.HORIZONTAL )
 		fgSizerPortSet.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
 		self.m_textMiddlePort = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"端   口：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddlePort.Wrap( -1 )
 
-		fgSizerPortSet.Add( self.m_textMiddlePort, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+		fgSizerPortSet.Add( self.m_textMiddlePort, 0, wx.ALIGN_CENTER_VERTICAL, 5 )
 
 		m_ccMiddlePortChoices = []
-		self.m_ccMiddlePort = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_ccMiddlePortChoices, 0 )
+		self.m_ccMiddlePort = wx.Choice( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.Size( 135,-1 ), m_ccMiddlePortChoices, 0 )
 		self.m_ccMiddlePort.SetSelection( 0 )
-		fgSizerPortSet.Add( self.m_ccMiddlePort, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND|wx.LEFT, 5 )
+		fgSizerPortSet.Add( self.m_ccMiddlePort, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.LEFT, 5 )
 
 		self.m_textMiddleBaud = wx.StaticText( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"波特率：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_textMiddleBaud.Wrap( -1 )
@@ -153,8 +153,16 @@ class signalToolMainPanel ( wx.Panel ):
 
 		sbSizerMiddleComPort.Add( fgSizerPortSet, 1, wx.EXPAND, 5 )
 
+		bSizerMiddleControl = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.m_btn_MiddleFlush = wx.Button( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"刷新串口", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizerMiddleControl.Add( self.m_btn_MiddleFlush, 0, wx.ALL, 5 )
+
 		self.m_btn_MiddleConnect = wx.Button( sbSizerMiddleComPort.GetStaticBox(), wx.ID_ANY, u"连接主控", wx.DefaultPosition, wx.DefaultSize, 0 )
-		sbSizerMiddleComPort.Add( self.m_btn_MiddleConnect, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 5 )
+		bSizerMiddleControl.Add( self.m_btn_MiddleConnect, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.TOP, 5 )
+
+
+		sbSizerMiddleComPort.Add( bSizerMiddleControl, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
 
 
 		sbSizerComPortSet.Add( sbSizerMiddleComPort, 0, wx.EXPAND, 5 )
@@ -440,6 +448,7 @@ class signalToolMainPanel ( wx.Panel ):
 		# Connect Events
 		self.m_listTestCase.Bind( wx.EVT_LISTBOX_DCLICK, self.OnTestCaseDClick )
 		self.m_btnSignalConnect.Bind( wx.EVT_BUTTON, self.OnButtonSignalConnectClick )
+		self.m_btn_MiddleFlush.Bind( wx.EVT_BUTTON, self.OnButtonMiddleFlushClick )
 		self.m_btn_MiddleConnect.Bind( wx.EVT_BUTTON, self.OnButtonMiddleConnectClick )
 		self.m_btnClearResult.Bind( wx.EVT_BUTTON, self.OnButtonClearTestResultClick )
 		self.m_btnStartTest.Bind( wx.EVT_BUTTON, self.OnButtonStartTestClick )
@@ -466,6 +475,9 @@ class signalToolMainPanel ( wx.Panel ):
 		event.Skip()
 
 	def OnButtonSignalConnectClick( self, event ):
+		event.Skip()
+
+	def OnButtonMiddleFlushClick( self, event ):
 		event.Skip()
 
 	def OnButtonMiddleConnectClick( self, event ):

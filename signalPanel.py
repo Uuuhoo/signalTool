@@ -18,7 +18,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         self.PortInit()
 
     def PortInit(self):
-        self.m_ccMiddlePort.SetItems(list(self.m_comDlg.comPorts.keys()))
+        self.m_ccMiddlePort.SetItems(list(self.m_comDlg.GetFlushComPorts().keys()))
         self.m_ccMiddlePort.SetSelection(0)
 
     def OnButtonSignalConnectClick(self, event) -> None:
@@ -39,11 +39,11 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
     def ConnectMainControl(self):
         """连接主控"""
-        port = self.m_comDlg.comPorts.get(self.m_ccMiddlePort.GetStringSelection())
+        port = self.m_comDlg.GetFlushComPorts().get(self.m_ccMiddlePort.GetStringSelection())
         baud = int(self.m_ccMiddleBaud.GetStringSelection())
         bitsize = self.m_ccMiddleDBitNum.GetStringSelection()
         check = self.m_ccMiddleCheck.GetStringSelection()
-        check = 'N'  # 固定不校验
+        check = 'None'  # 固定不校验
         stopsize = self.m_ccMiddleStopBit.GetStringSelection()
 
         Parity = {'None': 'N', 'Even': 'E', 'Odd': 'O'}
@@ -70,6 +70,10 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         elif self.m_btn_MiddleConnect.GetLabel() == "断开主控":
             self.m_comDlg.serialHandler.close()
             self.m_btn_MiddleConnect.SetLabelText("连接主控")
+
+    def OnButtonMiddleFlushClick(self, event):
+        """刷新主控"""
+        self.PortInit()
 
     def OnButtonClearTestResultClick(self, event):
 
