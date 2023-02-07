@@ -51,13 +51,20 @@ class SignalTool:
         self.signalInfo = SignalInfo()
 
     def GetConnectStatus(self) -> bool:
+        """
+        获取信号发生器连接状态
+        :return: True or False
+        """
         if self.signalObject is not None:
             return True
         else:
             return False
 
     def DoConnect(self) -> bool:
-        """连接信号发生器"""
+        """
+        连接信号发生器
+        :return: True or False
+        """
         signalInfo = SignalInfo()
         for hwAddr in signalInfo.signalHWAddrs:
             try:
@@ -69,10 +76,95 @@ class SignalTool:
                 return False
         del signalInfo
 
-    def SendSignalCmd(self, cmd):
+    def SendSignalCmd(self, cmd) -> None:
+        """
+        向信号发生器发送控制命令
+        :param cmd: cmd
+        :return: None
+        """
         try:
             self.signalObject.write(cmd)
         except:
             wx.MessageBox("请检查信号发生器连接状态！", "警告", wx.ICON_WARNING)
             print("信号发生器发送命令失败")
             self.signalObject = None
+
+    @staticmethod
+    def GetOUTPUTCmd(num: int, status: bool) -> str:
+        """
+        获取信号发生器输出命令
+        :param status: True: ON , False: OFF
+        :param num: 通道1or2
+        :return: 输出cmd
+        """
+        if status:
+            temp = 'ON'
+        else:
+            temp = 'OFF'
+        cmd = ':OUTPUT%s %s' % (str(num), temp)
+        return cmd
+
+    @staticmethod
+    def GetBEEPCmd() -> str:
+        """
+        获取信号发生器Beep命令
+        :return: 输出cmd
+        """
+        cmd = ':SYSTem:BEEPer:IMMediate'
+        return cmd
+
+    @staticmethod
+    def GetAPPLPULSCmd(num: int, freq: str, amp: str, offset: str, phase: str = '0') -> str:
+        """
+        设置指定通道的波形为具有指定频率、幅度、偏移和相位的脉冲
+        :param num:通道1or2
+        :param freq:频率
+        :param amp:幅度
+        :param offset:偏移
+        :param phase:相位，默认为0
+        :return:输出cmd
+        """
+        cmd = ':SOUR%s:APPL:PULS %s,%s,%s,%s' % (str(num), freq, amp, offset, phase)
+        return cmd
+
+    @staticmethod
+    def GetTRISECMD(num:int, sec:str) -> str:
+        """
+        设置指定通道的脉冲上升沿时间
+        :param num:通道1or2
+        :param sec:时间以秒为单位
+        :return:输出cmd
+        """
+        cmd = ':SOUR%s:FUNC:PULS:TRAN:LEAD %s'% (str(num), sec)
+        return cmd
+
+    @staticmethod
+    def GetTDOWNCMD(num:int, sec:str) -> str:
+        """
+        设置指定通道的脉冲下降沿时间
+        :param num:通道1or2
+        :param sec:时间以秒为单位
+        :return:输出cmd
+        """
+        cmd = ':SOUR%s:FUNC:PULS:TRAN:TRA %s'% (str(num), sec)
+        return cmd
+
+    @staticmethod
+    def GetDCYCCMD(num:int, per:str = '50') -> str:
+        """
+        设置指定通道的脉冲占空比
+        :param num:通道1or2
+        :param per:占空比百分比
+        :return: 输出cmd
+        """
+        cmd = ':SOUR%s:PULS:DCYC %s' % (str(num), per)
+        return cmd
+
+    @staticmethod
+    def GetBEEPCmd() -> str:
+        """
+        获取信号发生器Beep命令
+        :return: 输出cmd
+        """
+        cmd = ':SYSTem:BEEPer:IMMediate'
+        return cmd

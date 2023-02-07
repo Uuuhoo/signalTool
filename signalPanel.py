@@ -6,14 +6,12 @@ import wx
 import Port.comPort as ComPort
 import Signal.signalHandler as SignalHandler
 import Gui.guiSignal as GuiSignal
-import Signal.signalCmd as signalCMD
 
 
 class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
     def __init__(self, parent):
         GuiSignal.signalToolMainPanel.__init__(self, parent)
         self.mainFrame = parent
-        self.signalCMD = signalCMD.SignalCMD
         self.m_comDlg = ComPort.ComPort()
         self.PortInit()
 
@@ -28,7 +26,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             wx.MessageBox("信号发生器连接失败，请检查连接状态！", "Warning!")
             print('信号发生器连接失败！')
             return
-        signalHandler.SendSignalCmd(self.signalCMD.Beep)
+        signalHandler.SendSignalCmd(signalHandler.GetBEEPCmd())
         self.m_textSignalAddr.SetValue(signalHandler.signalInfo.GetNowAddr())
         event.Skip()
 
@@ -64,19 +62,19 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 self.m_comDlg.serialHandler.open()
                 wx.MilliSleep(50)
             except serial.SerialException:
-                wx.MessageBox("打开 " + self.m_comDlg.serialHandler.port + "失败！", "警告！", wx.OK)
+                wx.MessageBox("打开 " + str(self.m_comDlg.serialHandler.port) + "失败！", "警告！", wx.OK)
                 return
-            self.m_btn_MiddleConnect.SetLabelText("断开主控")
+            wx.CallAfter(self.m_btn_MiddleConnect.SetLabelText, "断开主控")
         elif self.m_btn_MiddleConnect.GetLabel() == "断开主控":
             self.m_comDlg.serialHandler.close()
-            self.m_btn_MiddleConnect.SetLabelText("连接主控")
+            wx.CallAfter(self.m_btn_MiddleConnect.SetLabelText, "连接主控")
 
     def OnButtonMiddleFlushClick(self, event):
         """刷新主控"""
         self.PortInit()
 
     def OnButtonClearTestResultClick(self, event):
-
+        wx.CallAfter(self.m_listTestCase.Clear)
         event.Skip()
 
     def OnButtonStartTestClick(self, event):
