@@ -12,6 +12,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
     def __init__(self, parent):
         GuiSignal.signalToolMainPanel.__init__(self, parent)
         self.mainFrame = parent
+        self.row = 1
         self.m_comDlg = ComPort.ComPort()
         self.PortInit()
 
@@ -70,11 +71,12 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             wx.CallAfter(self.m_btn_MiddleConnect.SetLabelText, "连接主控")
 
     def OnButtonMiddleFlushClick(self, event):
-        """刷新主控"""
-        self.PortInit()
+        """刷新主控接口"""
+        wx.CallAfter(self.PortInit)
 
     def OnButtonClearTestResultClick(self, event):
-        wx.CallAfter(self.m_listTestCase.Clear)
+        wx.CallAfter(self.m_resultGrid.ClearGrid)
+        self.row = 1
         event.Skip()
 
     def OnButtonStartTestClick(self, event):
@@ -90,7 +92,11 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         event.Skip()
 
     def OnCkVariableParamClick(self, event):
-        """可变参数点击事件，对按钮进行相应的enable处理"""
+        """
+        可变参数点击事件，对按钮进行相应的enable处理
+        :param event:
+        :return:
+        """
         eventObject = event.GetEventObject()
         self.m_radioHighVol.Enable(eventObject.GetValue())
         self.m_radioLowVol.Enable(eventObject.GetValue())
@@ -119,26 +125,116 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         event.Skip()
 
     def OnButtonAddTestCaseClick(self, event):
-        """添加测试项"""
-        if self.m_ckBoxIsVariable.GetValue():
-            """有可变测试项"""
-            # self
+        """
+        添加配置好的测试项至测试列表中
+        :param event:evt
+        :return:None
+        """
+        wx.CallAfter(self.AddTestCase2List)
         event.Skip()
 
-    def OnButtonClearTestCaseClick(self, event):
+    def AddTestCase2List(self):
+        """
+        添加测试条件
+        :return:None
+        """
+        unitMapping = {'ns': 0, 'us': 3, 'ms': 6}
+        uintRise = self.m_cbBoxRiseTimeUint.GetStringSelection()
+        uintDecline = self.m_cbBoxDeclineTimeUint.GetStringSelection()
 
+        minV = self.m_textMinValue.GetValue()
+        step = self.m_textStep.GetValue()
+        vHigh = self.m_textHighVol.GetValue()
+        vLow = self.m_textLowVol.GetValue()
+        tRise = self.m_textRiseTime.GetValue() + unitMapping.get(uintRise) * '0'
+        tDecline = self.m_textDeclineTime.GetValue() + unitMapping.get(uintDecline) * '0'
+        period = self.m_textPeriod.GetValue()
+        times = self.m_textTimes.GetValue()
+
+        if not self.m_ckBoxIsVariable.IsChecked():    # 不可变参数
+            testCase = 'Vh%s,Vl%s,Tr%s,Td%s,Tp%s,Tn%s' % \
+                       (vHigh, vLow, tRise, tDecline, period, times)
+        else:
+            if self.m_radioHighVol.GetValue():  # 可变高电平
+                testCase = 'Vh[%s,%s,%s],Vl%s,Tr%s,Td%s,Tp%s,Tn%s' % \
+                           (minV, vHigh, step, vLow, tRise, tDecline, period, times)
+            elif self.m_radioLowVol.GetValue():  # 可变低电平
+                testCase = 'Vh%s,Vl[%s,%s,%s],Tr%s,Td%s,Tp%s,Tn%s' % \
+                           (vHigh, minV, vLow, step, tRise, tDecline, period, times)
+            elif self.m_radioRiseTime.GetValue():  # 可变上升沿时间
+                if minV != '0':
+                    minV = self.m_textMinValue.GetValue() + unitMapping.get(uintRise) * '0'
+                step = self.m_textStep.GetValue() + unitMapping.get(uintRise) * '0'
+                testCase = 'Vh%s,Vl%s,Tr[%s,%s,%s],Td%s,Tp%s,Tn%s' % \
+                           (vHigh, vLow, minV, tRise, step, tDecline, period, times)
+            elif self.m_radioDeclineTime.GetValue():  # 可变下降沿时间
+                if minV != '0':
+                    minV = self.m_textMinValue.GetValue() + unitMapping.get(uintDecline) * '0'
+                step = self.m_textStep.GetValue() + unitMapping.get(uintDecline) * '0'
+                testCase = 'Vh%s,Vl%s,Tr%s,Td[%s,%s,%s],Tp%s,Tn%s' % \
+                           (vHigh, vLow, tRise, minV, tDecline, step, period, times)
+            else:
+                wx.MessageBox("可变参数内容未勾选！")
+                return
+        self.m_listTestCase.Append(testCase)
+
+    def OnButtonClearTestCaseClick(self, event):
+        """
+        清空测试条件
+        :param event:
+        :return:None
+        """
+        wx.CallAfter(self.m_listTestCase.Clear)
         event.Skip()
 
     def OnButtonSaveTestCaseClick(self, event):
-
+        """
+        保存测试条件
+        :param event:evt
+        :return:None
+        """
+        testCase = self.m_listTestCase.GetStrings()
+        dlg = wx.FileDialog(self, '保存', defaultFile='powerUdCfg', defaultDir='./', wildcard='*.txt', style=wx.FD_SAVE)
+        if dlg.ShowModal() == wx.ID_CANCEL:
+            return
+        save_path = dlg.GetPath()
+        try:
+            with open(save_path, 'w') as f:
+                f.writelines(testCase)
+        except PermissionError:
+            wx.MessageBox('权限不足！', '警告', parent=self)
+        except FileNotFoundError:
+            wx.MessageBox('未找到文件!', '警告', parent=self)
+        wx.MessageBox('保存成功！', '提示', parent=self)
         event.Skip()
 
     def OnButtonLoadTestCaseClick(self, event):
-
+        """
+        加载测试条件
+        :param event:evt
+        :return:None
+        """
+        dlg = wx.FileDialog(self, '加载', defaultDir='./', wildcard='*.txt', style=wx.FD_OPEN)
+        if dlg.ShowModal() == wx.ID_CANCEL:
+            return
+        load_path = dlg.GetPath()
+        try:
+            with open(load_path, 'r') as f:
+                lines = f.readlines()
+        except PermissionError:
+            wx.MessageBox('权限不足！', '警告')
+        except FileNotFoundError:
+            wx.MessageBox('未找到文件！', '警告')
+        for line in lines:
+            wx.CallAfter(self.m_listTestCase.Append, line)
         event.Skip()
 
     def OnTimeUintcbBoxChanged(self, event):
-        """若上升下降沿修改时间单位时可变参数选择了上升沿或下降沿，则对单位进行修改"""
+        """
+        若上升下降沿修改时间单位时可变参数选择了上升沿或下降沿，则对单位进行修改
+        :param event:evt
+        :return:None
+        """
         eventObject = event.GetEventObject()
         if eventObject.GetToolTip() == self.m_cbBoxRiseTimeUint.GetToolTip() and self.m_radioRiseTime.GetValue():
             riseUint = self.m_cbBoxRiseTimeUint.GetString(self.m_cbBoxRiseTimeUint.GetSelection())
@@ -151,7 +247,11 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         event.Skip()
 
     def OnTestCaseDClick(self, event):
-        """测试项双击,删除测试项"""
+        """
+        测试条件双击,删除测试条件
+        :param event:
+        :return:
+        """
         eventObeject = event.GetEventObject()
         eventObeject.Delete(eventObeject.GetSelection())
         event.Skip()

@@ -1,7 +1,6 @@
 import re
 
 import pyvisa
-from Signal.signalCmd import *
 # from signalCmd import *
 import wx
 
@@ -47,7 +46,6 @@ class SignalTool:
     def __init__(self):
         self.rm = pyvisa.ResourceManager(visa_dll)
         self.signalObject = None
-        self.signalCMD = SignalCMD()
         self.signalInfo = SignalInfo()
 
     def GetConnectStatus(self) -> bool:
@@ -160,11 +158,11 @@ class SignalTool:
         cmd = ':SOUR%s:PULS:DCYC %s' % (str(num), per)
         return cmd
 
-    @staticmethod
-    def GetBEEPCmd() -> str:
-        """
-        获取信号发生器Beep命令
-        :return: 输出cmd
-        """
-        cmd = ':SYSTem:BEEPer:IMMediate'
-        return cmd
+    # @staticmethod
+    # def GetBEEPCmd() -> str:
+    #     """
+    #     获取信号发生器Beep命令
+    #     :return: 输出cmd
+    #     """
+    #     cmd = ':SYSTem:BEEPer:IMMediate'
+    #     return cmd

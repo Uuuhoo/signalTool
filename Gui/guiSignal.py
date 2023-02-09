@@ -60,8 +60,8 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_panelTestCase = wx.Panel( self.m_splitterTestCaseAndComPort, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		sbSizerTestCase = wx.StaticBoxSizer( wx.StaticBox( self.m_panelTestCase, wx.ID_ANY, u"测试项" ), wx.VERTICAL )
 
-		m_listTestCaseChoices = [ u"很大声的", u"大萨达撒" ]
-		self.m_listTestCase = wx.ListBox( sbSizerTestCase.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_listTestCaseChoices, 0 )
+		m_listTestCaseChoices = []
+		self.m_listTestCase = wx.ListBox( sbSizerTestCase.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_listTestCaseChoices, wx.LB_HSCROLL )
 		sbSizerTestCase.Add( self.m_listTestCase, 1, wx.EXPAND|wx.ALL, 5 )
 
 
@@ -269,6 +269,7 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_radioHighVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"高电平", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioHighVol.SetValue( True )
 		self.m_radioHighVol.Enable( False )
 
 		setSizer.Add( self.m_radioHighVol, 0, wx.ALL, 5 )
