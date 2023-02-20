@@ -227,15 +227,26 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_resultGrid.SetMargins( 0, 0 )
 
 		# Columns
-		self.m_resultGrid.SetColSize( 0, 85 )
+		self.m_resultGrid.SetColSize( 0, 84 )
 		self.m_resultGrid.SetColSize( 1, 88 )
-		self.m_resultGrid.SetColSize( 2, 114 )
+		self.m_resultGrid.SetColSize( 2, 102 )
 		self.m_resultGrid.SetColSize( 3, 110 )
 		self.m_resultGrid.EnableDragColMove( False )
 		self.m_resultGrid.EnableDragColSize( True )
+		self.m_resultGrid.SetColLabelValue( 0, u"上升沿" )
+		self.m_resultGrid.SetColLabelValue( 1, u"下降沿" )
+		self.m_resultGrid.SetColLabelValue( 2, u"低电平起" )
+		self.m_resultGrid.SetColLabelValue( 3, u"低电平止" )
+		self.m_resultGrid.SetColLabelValue( 4, wx.EmptyString )
+		self.m_resultGrid.SetColLabelValue( 5, wx.EmptyString )
 		self.m_resultGrid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
 
 		# Rows
+		self.m_resultGrid.SetRowSize( 0, 21 )
+		self.m_resultGrid.SetRowSize( 1, 21 )
+		self.m_resultGrid.SetRowSize( 2, 21 )
+		self.m_resultGrid.SetRowSize( 3, 21 )
+		self.m_resultGrid.SetRowSize( 4, 21 )
 		self.m_resultGrid.EnableDragRowSize( True )
 		self.m_resultGrid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
 
@@ -269,12 +280,12 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_radioHighVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"高电平", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_radioHighVol.SetValue( True )
 		self.m_radioHighVol.Enable( False )
 
 		setSizer.Add( self.m_radioHighVol, 0, wx.ALL, 5 )
 
 		self.m_radioLowVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"低电平", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_radioLowVol.SetValue( True )
 		self.m_radioLowVol.Enable( False )
 
 		setSizer.Add( self.m_radioLowVol, 0, wx.ALL, 5 )

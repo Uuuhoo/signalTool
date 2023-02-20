@@ -9,6 +9,9 @@ import Signal.signalHandler as SignalHandler
 import Gui.guiSignal as GuiSignal
 import threading
 import sched
+from openpyxl import Workbook, load_workbook
+import csv
+from datetime import datetime
 
 
 class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
@@ -17,8 +20,9 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         self.mainFrame = parent
         self.row = 1
         self.comPort = ComPort.ComPort()
-        self.runHandle = None
-        self.recvHandle = None
+        self.runHandle = None  # 主线程
+        self.recvHandle = None  # 接收线程
+        self.judgeHandle = None  # 判断线程
         self.condition = threading.Condition()
         self.dataQueue = queue.Queue()
         self.stop_threads = False  # 停止线程标识
@@ -26,6 +30,14 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         self.Bind(ComPort.EVT_DATA, self.ReceiveProcess)
         self.signalHandler = SignalHandler.SignalTool()
         self.PortInit()
+
+        self.err_cnt = 0
+
+    def Close(self, force=False):
+        self.Destroy()
+
+    def Destroy(self):
+        wx.CallAfter(self.StopThread)
 
     def PortInit(self):
         """
@@ -37,6 +49,10 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
     def OnButtonSignalConnectClick(self, event) -> None:
         """连接信号发生器"""
+        self.ConnectSiganl()
+        event.Skip()
+
+    def ConnectSiganl(self):
         if not self.signalHandler.DoConnect():
             wx.MessageBox("信号发生器连接失败，请检查连接状态！", "Warning!")
             wx.CallAfter(self.m_textSignalAddr.SetValue, "")
@@ -46,11 +62,10 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
         wx.CallAfter(self.m_textSignalAddr.SetValue, self.signalHandler.signalInfo.GetNowAddr())
         wx.CallAfter(self.m_btnSignalConnect.SetLabelText, "已连接信号发生器")
-        event.Skip()
 
     def OnButtonMiddleConnectClick(self, event):
         """连接主控点击事件"""
-        self.ConnectMainControl()
+        wx.CallAfter(self.ConnectMainControl)
         event.Skip()
 
     def ConnectMainControl(self):
@@ -66,7 +81,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         DataBits = {'5': 5, '6': 6, '7': 7, '8': 8}
         StopBits = {'1': 1, '1.5': 1.5, '2': 2}
         self.comPort.serialHandler.close()
-        wx.MilliSleep(50)
+        # wx.MilliSleep(50)
 
         self.comPort.serialHandler.port = port
         self.comPort.serialHandler.baudrate = baud
@@ -78,7 +93,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         if self.m_btn_MiddleConnect.GetLabel() == "连接主控":
             try:
                 self.comPort.serialHandler.open()
-                wx.MilliSleep(50)
+                # wx.MilliSleep(50)
             except serial.SerialException:
                 wx.MessageBox("打开 " + str(self.comPort.serialHandler.port) + "失败！", "警告！", wx.OK)
                 return
@@ -125,6 +140,8 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         :param stop_threads:线程停止标识
         :return:None
         """
+        # self.ConnectvSiganl()
+        self.stop_threads = False
         cmdType = SignalHandler.cmdType
         testQueue = []
         testCase = self.m_listTestCase.GetStrings()
@@ -145,7 +162,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         # 根据解析完的命令依次进行测试
         for i in range(len(testQueue)):
             if stop_threads():
-                self.stopThread()
+                self.StopThread()
                 return
             nowTest = testQueue[i]
             if nowTest.get(cmdType.VariableParamName) == cmdType.Vh:
@@ -157,56 +174,112 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 step = float(lvs[2])
 
                 while low <= high:
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
-                    # self.signalHandler.SendSignalCmd(
-                    #     self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
-                    # self.signalHandler.SendSignalCmd(
-                    #     self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
-                    # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
+
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+                    self.signalHandler.SendSignalCmd(
+                        self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
+                    self.signalHandler.SendSignalCmd(
+                        self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
                     print('-------start time:' + str(time.time()))
-                    self.schedule.enter(0.4, 1, self.CheckResult, )
-                    for _ in range(int(nowTest.get(cmdType.Tn))-1):
+                    Judge_delay = 0.35
+                    self.err_cnt = 0
+                    self.JudgeThread(Judge_delay)
+                    # 循环次数并判断
+                    for _ in range(int(nowTest.get(cmdType.Tn)) - 1):
+                        if stop_threads():
+                            self.StopThread()
+                            return
                         if self.recvHandle is not None:
                             pass
-                        self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.Task4Check, )
+                        self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.JudgeThread, (Judge_delay,))
                         self.schedule.run()
                     low += step
 
+                    self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.OnceCyclingFinished)
+                    self.schedule.run()
+
+                    if self.err_cnt > 0:
+                        print('error in ' + str(low) + ' v with Tr: ' + nowTest.get(cmdType.Tr)
+                              + 's and Td: ' + nowTest.get(cmdType.Td) + 's')
                     print('-------finished time:' + str(time.time()))
+
             if nowTest.get(cmdType.VariableParamName) == cmdType.Tr:
                 pass
             if nowTest.get(cmdType.VariableParamName) == cmdType.Td:
                 pass
-            freq = nowTest.get(cmdType.Tn)
 
-        self.stopThread()
+        self.StopThread()
 
-    def Task4Check(self):
-        self.schedule.enter(0.4, 1, self.CheckResult, )     # 用线程实现
-        self.schedule.run()
-        # self.CheckResult()
-        # wx.CallLater(400, self.CheckResult)
+    def JudgeThread(self, delay):
+        if self.judgeHandle is None:
+            self.judgeHandle = threading.Timer(delay, self.JudgeResult)
+            if self.judgeHandle.is_alive() is False:
+                self.judgeHandle.setName('检查结果线程')
+                self.judgeHandle.start()
 
-    def CheckResult(self):
-        # self.comPort.SendData('5A')
+    def JudgeResult(self):
         print('run task time:' + str(time.time()))
+        self.dataQueue.queue.clear()
+        self.condition.acquire()
+        self.comPort.SendData(bytes.fromhex('5A'))
+        # wx.MilliSleep(10)
+        self.condition.wait(1)
+        recv_data = self.dataQueue.get()
+        print('recv ---------:' + recv_data)
+        if recv_data != 'A5':
+            self.err_cnt += 1
+        self.condition.release()
+        self.StopJudgeThread()
 
-    def stopThread(self):
+    def OnceCyclingFinished(self):
+        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
+
+    def SaveTestResult(self):
+        headers, cell_values = [], []
+        temp = []
+        for i in range(self.m_resultGrid.GetNumberCols()):
+            temp.append(self.m_resultGrid.GetColLabelValue(i))
+        headers = tuple(temp)
+
+        number_row = self.m_resultGrid.GetNumberRows()
+        number_col = self.m_resultGrid.GetNumberCols()
+
+        for i in range(number_row):
+            temp = []
+            for j in range(number_col):
+                temp.append(self.m_resultGrid.GetCellValue(i, j))
+            cell_values.append(tuple(temp))
+
+        nowtime = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        try:
+            with open('.\\log\\' + nowtime + '错误结果.csv', 'w', encoding='utf-8', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+                writer.writerows(cell_values)
+        except:
+            pass
+
+    def StopJudgeThread(self):
+        self.judgeHandle = None
+
+    def StopThread(self):
+        wx.CallAfter(self.SaveTestResult)
+        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
+        self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
         self.stop_threads = True
         self.runHandle = None
         self.recvHandle = None
+        self.StopJudgeThread()
 
     def OnButtonStopTestClick(self, event):
         """停止测试按钮"""
-        self.stop_threads = True
-        self.runHandle = None
-        self.recvHandle = None
+        wx.CallAfter(self.StopThread)
         event.Skip()
 
     def OnButtonOpenResultFolderClick(self, event):
