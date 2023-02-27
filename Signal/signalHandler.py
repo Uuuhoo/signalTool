@@ -20,6 +20,7 @@ class cmdType(enumerate):
     Tp = 'Period'
     Tn = 'CyclingTimes'
     LowHighStep = 'low_high_step'
+    JudgeDelay = 'JudgeDelayTime_MS'
 
 
 class CmdAnalyse:
@@ -33,6 +34,7 @@ class CmdAnalyse:
         self._Tp = ''
         self._Tn = ''
         self._low_high_step = []
+        self._judge_delay = ''
         self._AnalyseCmd()
 
     def __del__(self):
@@ -46,6 +48,7 @@ class CmdAnalyse:
         Td = cmds[3]  # 下降沿得到的是ns，需要s
         Tp = cmds[4]  # 周期得到的是ms，需要s
         Tn = cmds[5]  # 次数
+        JudgeDelay = cmds[6]
         variablePattern = '\d+\_\d+\_\d+'
         mathPattern = '\d+'
         self._Vh = str(float(re.search(mathPattern, Vh).group()) / 1000)  # 高电平单位mV->V
@@ -54,6 +57,7 @@ class CmdAnalyse:
         self._Td = str(float(re.search(mathPattern, Td).group()) / 1000000000)  # 上升沿单位ns->s
         self._Tp = str(float(re.search(mathPattern, Tp).group()) / 1000)  # 周期单位ms->s
         self._Tn = re.search(mathPattern, Tn).group()
+        self._JudgeDelay = str(re.search(mathPattern, JudgeDelay).group())  # 判断延时ms
         if re.search(variablePattern, Vh) is not None:
             self._variableParamName = cmdType.Vh
             self._Vh = re.search(variablePattern, Vh).group()
@@ -117,6 +121,10 @@ class CmdAnalyse:
         """获取可变参数的最小值，最大值，步长"""
         return self._low_high_step
 
+    def GetJudgeDelayValue(self):
+        """获取校验结果延时参数，ms"""
+        return self._JudgeDelay
+
 
 class SignalInfo:
     def __init__(self):
@@ -141,6 +149,9 @@ class SignalInfo:
                     wx.MessageBox("SignalHardwareAddr.ini配置文件中的信号发生器地址格式异常！", wx.OK)
                     return
                 self.signalHWAddrs.append(addr)
+        else:
+            self.signalHWAddrs.append(usb_addr1)
+            self.signalHWAddrs.append(usb_addr2)
 
     def SetNowAddr(self, addr):
         self.__signalNowAddr = addr

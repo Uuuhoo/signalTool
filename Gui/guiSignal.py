@@ -306,7 +306,7 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_staticline1 = wx.StaticLine( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		sbSizerSignalSet.Add( self.m_staticline1, 0, wx.EXPAND |wx.ALL, 5 )
 
-		setSizer1 = wx.GridSizer( 8, 3, 0, 0 )
+		setSizer1 = wx.GridSizer( 9, 3, 0, 0 )
 
 		self.m_staticTextMinValueLabel = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"最小值：", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticTextMinValueLabel.Wrap( -1 )
@@ -419,6 +419,19 @@ class signalToolMainPanel ( wx.Panel ):
 		self.m_staticTextTimesUint.Wrap( -1 )
 
 		setSizer1.Add( self.m_staticTextTimesUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+		self.m_staticTextJudgeDelay = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"判断延时时间：", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextJudgeDelay.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextJudgeDelay, 0, wx.ALL, 5 )
+
+		self.m_textJudgeDelay = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"150", wx.DefaultPosition, wx.DefaultSize, 0 )
+		setSizer1.Add( self.m_textJudgeDelay, 0, wx.ALL, 5 )
+
+		self.m_staticTextJudgeDelayUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextJudgeDelayUint.Wrap( -1 )
+
+		setSizer1.Add( self.m_staticTextJudgeDelayUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
 
 
 		sbSizerSignalSet.Add( setSizer1, 1, wx.EXPAND, 5 )
