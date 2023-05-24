@@ -1,3 +1,4 @@
+import os
 import queue
 import time
 
@@ -9,9 +10,10 @@ import Signal.signalHandler as SignalHandler
 import Gui.guiSignal as GuiSignal
 import threading
 import sched
-import csv
 from datetime import datetime
 from decimal import Decimal
+
+global global_interval
 
 
 class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
@@ -171,7 +173,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             nowTest = testQueue[i]
             if nowTest.get(cmdType.VariableParamName) == cmdType.Vh:
                 pass
-            if nowTest.get(cmdType.VariableParamName) == cmdType.Vl:
+            elif nowTest.get(cmdType.VariableParamName) == cmdType.Vl:
                 lvs = nowTest.get(cmdType.LowHighStep)
                 low = Decimal(lvs[0])
                 high = Decimal(lvs[1])
@@ -179,19 +181,31 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 _err_flag = False
                 ret = []
                 while low <= high and not stop_threads():
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS')) # 设置波形为脉冲
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
-                    self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
-                    print('-------start time:' + str(time.time()))
-                    Judge_delay = float(nowTest.get(cmdType.JudgeDelay))/1000
+                    try:
+                        self.OnceCyclingStart()
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
+                        # self.signalHandler.SendSignalCmd(':SOUR1:VOLT:RANG:AUTO ON')
+                        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
+                    except ConnectionError:
+                        self.ConnectError(0)
+                        return False
+                    print('-------start time2:' + str(time.time()))
+                    global global_interval
+                    global_interval = (time.time() - global_interval) * 1000
+                    print('--------interval is :'+str(global_interval))
+                    # _offset = self.getOffset(global_interval)
+                    _offset = 0.02       # 信号发生器实际波形偏移 140ms + 134ms - (time2-time1)(4ms) = 270ms-42ms(关开时间) = 228ms
+                    Judge_delay = float(nowTest.get(cmdType.JudgeDelay)) / 1000 + _offset
                     self.err_cnt = 0
-                    self.JudgeThread(Judge_delay, stop_threads)
+                    # 第一个周期上升沿不对，不判断
+                    # self.JudgeThread(Judge_delay, stop_threads)
                     # 循环次数并判断
                     for _ in range(int(nowTest.get(cmdType.Tn)) - 1):
                         if stop_threads():
@@ -203,14 +217,19 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                         self.schedule.run()
 
                     if not stop_threads():
-                        self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.OnceCyclingFinished)
-                        self.schedule.run()
+                        try:
+                            self.schedule.enter(float(nowTest.get(cmdType.Tp))*0.8, 1, self.OnceCyclingFinished)
+                            # self.schedule.enter(1.0, 1, self.OnceCyclingFinished)
+                            self.schedule.run()
+                        except ConnectionError:
+                            self.ConnectError(0)
+                            return False
 
                     if (self.err_cnt == 0 or low == high) and _err_flag is True:
                         if low == high:
                             err_now = str(int(low * 1000)) + 'mv'
                         else:
-                            err_now = str(int((low-step) * 1000)) + 'mv'
+                            err_now = str(int((low - step) * 1000)) + 'mv'
                         self.SetRowValue([err_Tr, err_Td, err_low, err_now])
                         self.row += 1
                         _err_flag = False
@@ -228,9 +247,13 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                     print('-------finished time:' + str(time.time()))
                     low += step
 
-            if nowTest.get(cmdType.VariableParamName) == cmdType.Tr:
+            elif nowTest.get(cmdType.VariableParamName) == cmdType.Tr:
                 pass
-            if nowTest.get(cmdType.VariableParamName) == cmdType.Td:
+            elif nowTest.get(cmdType.VariableParamName) == cmdType.Td:
+                pass
+            elif nowTest.get(cmdType.VariableParamName) == '':  # 单点测试
+                pass
+            else:
                 pass
         self.ExitTestThread()
         # self.StopThread()
@@ -243,18 +266,23 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 self.judgeHandle.start()
 
     def JudgeResult(self, stop_threads):
+
+        # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
+        # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))
+
         print('run task time:' + str(time.time()))
         self.dataQueue.queue.clear()
 
         if self.SendProcess('5A') is False:
             self.err_cnt += 1
+            self.StopJudgeThread()
             return False
         # wx.MilliSleep(20)
         # recv_data = ''
         self.condition.acquire()
         cnt = 0
-        while not stop_threads() and cnt < 2:
-            self.condition.wait(0.2)
+        while not stop_threads() and cnt < 4:
+            self.condition.wait(0.1)
             recv_data = self.dataQueue.get()
             print('recv ---------:' + recv_data)
             if self.CheckRecvFrame(recv_data) is not True:
@@ -283,7 +311,67 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             return False
 
     def OnceCyclingFinished(self):
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
+        """
+        指定次数的循环结束后，对芯片进行断电以进行下一个测试条件
+        :return: None
+        """
+        try:
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
+        except ConnectionError:
+            raise ConnectionError("信号发生器连接失败！")
+        print('-------close signal time:' + str(time.time()))
+
+    def OnceCyclingStart(self):
+        """
+        切换低电平时对信号发生器进行初始化操作，不断电
+        :return: None or raise Error
+        """
+        # try:
+        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, '0.1'))  # 周期
+        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, '0'))  # 低电平
+        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, '0.002'))  # 高电平
+        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, '5e-08'))  # 上升沿
+        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, '5e-08'))  # 下降沿
+        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
+        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
+        # except ConnectionError:
+        #     raise ConnectionError("信号发生器连接失败！")
+        # wx.MilliSleep(100)
+        wx.MilliSleep(10)
+        print('-------start time1:' + str(time.time()))
+        global global_interval
+        global_interval = time.time()
+        # time.sleep(1)
+
+    @staticmethod
+    def getOffset(interval):
+        """
+        获取信号发生器波形offset,部分为实测，少部分为预估
+        :param interval: 间隔 ms
+        :return: offset
+        """
+        if 50 <= interval:
+            offset = 0.13
+        elif 45 <= interval < 50:
+            offset = 0.17
+        elif 35 <= interval < 40:
+            offset = 0.20
+        elif 30 <= interval < 35:
+            offset = 0.23
+        elif 25 <= interval < 30:
+            offset = 0.27
+        elif 20 <= interval < 25:
+            offset = 0.32
+        elif 15 <= interval < 20:
+            offset = 0.35
+        elif interval < 15:
+            offset = 0.39
+        else:
+            offset = 0.36
+        return offset
+
 
     def SendProcess(self, cmd):
         data = bytearray.fromhex(cmd)
@@ -292,11 +380,14 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         return True
 
     def SaveTestResult(self):
+        """
+        保存测试结果
+        :return:None
+        """
         headers, cell_values = [], []
-        temp = []
         for i in range(self.m_resultGrid.GetNumberCols()):
-            temp.append(self.m_resultGrid.GetColLabelValue(i))
-        headers = tuple(temp)
+            headers.append(self.m_resultGrid.GetColLabelValue(i)+' ')
+        headers[-1] = headers[-1] + '\n'
 
         number_row = self.m_resultGrid.GetNumberRows()
         number_col = self.m_resultGrid.GetNumberCols()
@@ -304,15 +395,16 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         for i in range(number_row):
             temp = []
             for j in range(number_col):
-                temp.append(self.m_resultGrid.GetCellValue(i, j))
-            cell_values.append(tuple(temp))
+                temp.append(self.m_resultGrid.GetCellValue(i, j)+' ')
+            temp[-1] = temp[-1] + '\n'
+            cell_values.append(temp)
 
         nowtime = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
         try:
-            with open('.\\log\\' + nowtime + '错误结果.csv', 'w', encoding='utf-8', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(headers)
-                writer.writerows(cell_values)
+            with open('.\\log\\' + nowtime + '错误结果.txt', 'w', encoding='utf-8', newline='') as f:
+                f.writelines(headers)
+                for errInfo in cell_values:
+                    f.writelines(errInfo)
                 print("异常结果保存成功！")
         except:
             wx.MessageBox("保存失败！", "警告")
@@ -340,6 +432,20 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         print('MainTestThread has stopped')
         self.StopJudgeThread()
 
+    def ConnectError(self, type=0):
+        """
+        连接失败，
+        :param type: 0:信号发生器  1:中位机
+        :return:None
+        """
+        if type == 0:
+            wx.CallAfter(self.m_btnSignalConnect.SetLabelText, "连接信号发生器")
+            wx.CallAfter(self.m_textSignalAddr.SetValue, "")
+        elif type == 1:
+            pass
+        wx.CallAfter(self.SaveTestResult)
+        wx.MessageBox('已保存目前的测试结果！', '提醒')
+
     def SetRowValue(self, value: list):
         """
         设定测试结果表格一行的值
@@ -360,6 +466,8 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
     def OnButtonOpenResultFolderClick(self, event):
         """打开测试结果文件夹"""
+        path = '.\\log\\'
+        os.startfile(path)
         event.Skip()
 
     def OnCkVariableParamClick(self, event):
@@ -383,16 +491,16 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         """可变参数子项点击事件，修改相应的单位"""
         eventObject = event.GetEventObject()
         if eventObject.GetLabel() in ["高电平", "低电平"]:
-            self.m_staticTextMinValueUint.SetLabelText("mV/ms")
-            self.m_staticTextStepUint.SetLabelText("mV/ms")
+            self.m_staticTextMinValueUint.SetLabelText("mV")
+            self.m_staticTextStepUint.SetLabelText("mV/once")
         elif eventObject.GetLabel() in ["上升时间"]:
             riseUint = self.m_cbBoxRiseTimeUint.GetString(self.m_cbBoxRiseTimeUint.GetSelection())
             self.m_staticTextMinValueUint.SetLabelText(riseUint)
-            self.m_staticTextStepUint.SetLabelText(riseUint)
+            self.m_staticTextStepUint.SetLabelText(riseUint+'/once')
         elif eventObject.GetLabel() in ["下降时间"]:
             declineUint = self.m_cbBoxRiseTimeUint.GetString(self.m_cbBoxDeclineTimeUint.GetSelection())
             self.m_staticTextMinValueUint.SetLabelText(declineUint)
-            self.m_staticTextStepUint.SetLabelText(declineUint)
+            self.m_staticTextStepUint.SetLabelText(declineUint+'/once')
         event.Skip()
 
     def OnButtonAddTestCaseClick(self, event):
@@ -466,7 +574,8 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
         :return:None
         """
         testCase = self.m_listTestCase.GetStrings()
-        dlg = wx.FileDialog(self, '保存', defaultFile='powerUdCfg.txt', defaultDir='./', wildcard='*.txt', style=wx.FD_SAVE)
+        dlg = wx.FileDialog(self, '保存', defaultFile='powerUdCfg.txt', defaultDir='./', wildcard='*.txt',
+                            style=wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_CANCEL:
             return
         save_path = dlg.GetPath()
@@ -475,8 +584,10 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 f.writelines(testCase)
         except PermissionError:
             wx.MessageBox('权限不足！', '警告', parent=self)
+            return
         except FileNotFoundError:
             wx.MessageBox('未找到文件!', '警告', parent=self)
+            return
         wx.MessageBox('保存成功！', '提示', parent=self)
         event.Skip()
 
@@ -495,8 +606,13 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 lines = f.readlines()
         except PermissionError:
             wx.MessageBox('权限不足！', '警告')
+            return
         except FileNotFoundError:
             wx.MessageBox('未找到文件！', '警告')
+            return
+        except UnicodeDecodeError:
+            wx.MessageBox('编码格式异常！')
+            return
         for line in lines:
             wx.CallAfter(self.m_listTestCase.Append, line)
         event.Skip()

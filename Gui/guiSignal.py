@@ -18,7 +18,7 @@ import wx.grid
 class mainFrame ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"信号发生器手工复测工具 with WXPYTHON", pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -40,7 +40,7 @@ class mainFrame ( wx.Frame ):
 
 class signalToolMainPanel ( wx.Panel ):
 
-	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 799,624 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
+	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 811,624 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
 		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
 		OutterSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -274,30 +274,23 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer = wx.GridSizer( 3, 2, 0, 0 )
 
 		self.m_ckBoxIsVariable = wx.CheckBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"可变参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_ckBoxIsVariable.SetValue(True)
 		setSizer.Add( self.m_ckBoxIsVariable, 0, wx.ALL, 5 )
 
 
 		setSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 		self.m_radioHighVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"高电平", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_radioHighVol.Enable( False )
-
 		setSizer.Add( self.m_radioHighVol, 0, wx.ALL, 5 )
 
 		self.m_radioLowVol = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"低电平", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_radioLowVol.SetValue( True )
-		self.m_radioLowVol.Enable( False )
-
 		setSizer.Add( self.m_radioLowVol, 0, wx.ALL, 5 )
 
 		self.m_radioRiseTime = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"上升时间", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_radioRiseTime.Enable( False )
-
 		setSizer.Add( self.m_radioRiseTime, 0, wx.ALL, 5 )
 
 		self.m_radioDeclineTime = wx.RadioButton( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"下降时间", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_radioDeclineTime.Enable( False )
-
 		setSizer.Add( self.m_radioDeclineTime, 0, wx.ALL, 5 )
 
 
@@ -314,11 +307,9 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer1.Add( self.m_staticTextMinValueLabel, 0, wx.ALL, 5 )
 
 		self.m_textMinValue = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"0", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_textMinValue.Enable( False )
-
 		setSizer1.Add( self.m_textMinValue, 0, wx.ALL, 5 )
 
-		self.m_staticTextMinValueUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextMinValueUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticTextMinValueUint.Wrap( -1 )
 
 		setSizer1.Add( self.m_staticTextMinValueUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
@@ -329,11 +320,9 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer1.Add( self.m_staticTextStepLabel, 0, wx.ALL, 5 )
 
 		self.m_textStep = wx.TextCtrl( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"10", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_textStep.Enable( False )
-
 		setSizer1.Add( self.m_textStep, 0, wx.ALL, 5 )
 
-		self.m_staticTextStepUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/ms", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextStepUint = wx.StaticText( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"mV/once", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticTextStepUint.Wrap( -1 )
 
 		setSizer1.Add( self.m_staticTextStepUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
@@ -373,8 +362,8 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer1.Add( self.m_textRiseTime, 0, wx.ALL, 5 )
 
 		m_cbBoxRiseTimeUintChoices = [ u"ns", u"us", u"ms" ]
-		self.m_cbBoxRiseTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, m_cbBoxRiseTimeUintChoices, wx.CB_READONLY )
-		self.m_cbBoxRiseTimeUint.SetSelection( 0 )
+		self.m_cbBoxRiseTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"us", wx.DefaultPosition, wx.DefaultSize, m_cbBoxRiseTimeUintChoices, wx.CB_READONLY )
+		self.m_cbBoxRiseTimeUint.SetSelection( 1 )
 		self.m_cbBoxRiseTimeUint.SetToolTip( u"RiseTimeUint" )
 
 		setSizer1.Add( self.m_cbBoxRiseTimeUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
@@ -388,8 +377,8 @@ class signalToolMainPanel ( wx.Panel ):
 		setSizer1.Add( self.m_textDeclineTime, 0, wx.ALL, 5 )
 
 		m_cbBoxDeclineTimeUintChoices = [ u"ns", u"us", u"ms" ]
-		self.m_cbBoxDeclineTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, m_cbBoxDeclineTimeUintChoices, wx.CB_READONLY )
-		self.m_cbBoxDeclineTimeUint.SetSelection( 0 )
+		self.m_cbBoxDeclineTimeUint = wx.ComboBox( sbSizerSignalSet.GetStaticBox(), wx.ID_ANY, u"us", wx.DefaultPosition, wx.DefaultSize, m_cbBoxDeclineTimeUintChoices, wx.CB_READONLY )
+		self.m_cbBoxDeclineTimeUint.SetSelection( 1 )
 		self.m_cbBoxDeclineTimeUint.SetToolTip( u"DeclineTimeUint" )
 
 		setSizer1.Add( self.m_cbBoxDeclineTimeUint, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )

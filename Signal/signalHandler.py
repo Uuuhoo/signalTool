@@ -213,7 +213,8 @@ class SignalTool:
             wx.MessageBox("请检查信号发生器连接状态！", "警告", wx.ICON_WARNING)
             print("信号发生器发送命令失败")
             self.signalObject = None
-            return False
+            # return False
+            raise ConnectionError("信号发生器连接失败！")
 
     @staticmethod
     def GetOUTPUTCmd(num: int, status: bool) -> str:
