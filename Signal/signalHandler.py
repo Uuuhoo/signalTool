@@ -140,13 +140,13 @@ class SignalInfo:
                 content = file.readlines()
         except FileNotFoundError:
             content = None
-            wx.MessageBox("Signal目录下未找到SignalHardwareAddr.ini配置文件", wx.OK, None)
+            wx.MessageBox("Signal目录下未找到SignalHardwareAddr.ini配置文件，将使用内置默认配置文件", "警告", wx.OK)
         if content is not None:
             for line in content:
                 try:
                     addr = re.findall(addr_pattern, line)[0]
                 except IndexError:
-                    wx.MessageBox("SignalHardwareAddr.ini配置文件中的信号发生器地址格式异常！", wx.OK)
+                    wx.MessageBox("SignalHardwareAddr.ini配置文件中的信号发生器地址格式异常！", "警告", wx.OK)
                     return
                 self.signalHWAddrs.append(addr)
         else:

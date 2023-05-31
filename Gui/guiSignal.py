@@ -200,9 +200,9 @@ class signalToolMainPanel ( wx.Panel ):
 
 		bSizerProgress = wx.BoxSizer( wx.VERTICAL )
 
-		self.m_gauge1 = wx.Gauge( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, 100, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL )
-		self.m_gauge1.SetValue( 0 )
-		bSizerProgress.Add( self.m_gauge1, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5 )
+		self.m_gaugeProcess = wx.Gauge( sbSizerFuncs.GetStaticBox(), wx.ID_ANY, 100, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL )
+		self.m_gaugeProcess.SetValue( 0 )
+		bSizerProgress.Add( self.m_gaugeProcess, 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 5 )
 
 
 		sbSizerFuncs.Add( bSizerProgress, 0, wx.EXPAND, 5 )

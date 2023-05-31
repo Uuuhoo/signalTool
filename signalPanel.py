@@ -180,18 +180,26 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 step = Decimal(lvs[2])
                 _err_flag = False
                 ret = []
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '180'))  # 相位
+                self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
                 while low <= high and not stop_threads():
                     try:
                         self.OnceCyclingStart()
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
                         self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-                        self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
-                        # self.signalHandler.SendSignalCmd(':SOUR1:VOLT:RANG:AUTO ON')
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '180'))  # 相位
                         self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
                     except ConnectionError:
                         self.ConnectError(0)
@@ -200,12 +208,12 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                     global global_interval
                     global_interval = (time.time() - global_interval) * 1000
                     print('--------interval is :'+str(global_interval))
-                    # _offset = self.getOffset(global_interval)
-                    _offset = 0.02       # 信号发生器实际波形偏移 140ms + 134ms - (time2-time1)(4ms) = 270ms-42ms(关开时间) = 228ms
+                    # 信号发生器关闭打开实际波形偏移比代码耗时多大概20ms，相位180°，延迟半个周期判断
+                    _offset = 0.02 + float(nowTest.get(cmdType.Tp))/2
                     Judge_delay = float(nowTest.get(cmdType.JudgeDelay)) / 1000 + _offset
                     self.err_cnt = 0
                     # 第一个周期上升沿不对，不判断
-                    # self.JudgeThread(Judge_delay, stop_threads)
+                    self.JudgeThread(Judge_delay, stop_threads)
                     # 循环次数并判断
                     for _ in range(int(nowTest.get(cmdType.Tn)) - 1):
                         if stop_threads():
@@ -218,7 +226,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
                     if not stop_threads():
                         try:
-                            self.schedule.enter(float(nowTest.get(cmdType.Tp))*0.8, 1, self.OnceCyclingFinished)
+                            self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.OnceCyclingFinished)
                             # self.schedule.enter(1.0, 1, self.OnceCyclingFinished)
                             self.schedule.run()
                         except ConnectionError:
@@ -268,7 +276,6 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
     def JudgeResult(self, stop_threads):
 
         # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
-        # self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))
 
         print('run task time:' + str(time.time()))
         self.dataQueue.queue.clear()
@@ -321,57 +328,16 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             raise ConnectionError("信号发生器连接失败！")
         print('-------close signal time:' + str(time.time()))
 
-    def OnceCyclingStart(self):
+    @staticmethod
+    def OnceCyclingStart():
         """
         切换低电平时对信号发生器进行初始化操作，不断电
         :return: None or raise Error
         """
-        # try:
-        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
-        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, '0.1'))  # 周期
-        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, '0'))  # 低电平
-        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, '0.002'))  # 高电平
-        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, '5e-08'))  # 上升沿
-        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, '5e-08'))  # 下降沿
-        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-        #     # self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '0'))  # 相位
-        #     self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
-        # except ConnectionError:
-        #     raise ConnectionError("信号发生器连接失败！")
-        # wx.MilliSleep(100)
         wx.MilliSleep(10)
         print('-------start time1:' + str(time.time()))
         global global_interval
         global_interval = time.time()
-        # time.sleep(1)
-
-    @staticmethod
-    def getOffset(interval):
-        """
-        获取信号发生器波形offset,部分为实测，少部分为预估
-        :param interval: 间隔 ms
-        :return: offset
-        """
-        if 50 <= interval:
-            offset = 0.13
-        elif 45 <= interval < 50:
-            offset = 0.17
-        elif 35 <= interval < 40:
-            offset = 0.20
-        elif 30 <= interval < 35:
-            offset = 0.23
-        elif 25 <= interval < 30:
-            offset = 0.27
-        elif 20 <= interval < 25:
-            offset = 0.32
-        elif 15 <= interval < 20:
-            offset = 0.35
-        elif interval < 15:
-            offset = 0.39
-        else:
-            offset = 0.36
-        return offset
-
 
     def SendProcess(self, cmd):
         data = bytearray.fromhex(cmd)
