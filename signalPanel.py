@@ -165,10 +165,15 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                          cmdType.JudgeDelay: cmdAnalysed.GetJudgeDelayValue()
                          })
             testQueue.append(copy.deepcopy(tempItem))
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
+        try:
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))  # 关闭通道1
+        except ConnectionError:
+            self.ConnectError(0)
+            return False
         # 根据解析完的命令依次进行测试
         for i in range(len(testQueue)):
             if stop_threads():
+                wx.CallAfter(self.m_gaugeProcess.SetValue, 0)
                 return
             nowTest = testQueue[i]
             if nowTest.get(cmdType.VariableParamName) == cmdType.Vh:
@@ -178,28 +183,32 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                 low = Decimal(lvs[0])
                 high = Decimal(lvs[1])
                 step = Decimal(lvs[2])
+                self.m_gaugeProcess.SetLabelText('kaishiceshi')
+                wx.CallAfter(self.m_gaugeProcess.SetRange, len(testQueue)*((high-low)/step+1))
+                nowQueue = i+1
+                nowProcessValue = 0
+                wx.CallAfter(self.m_btnStartTest.Disable)
+                wx.CallAfter(self.m_btnStartTest.SetLabelText, str(nowQueue)+'/'+str(len(testQueue)))
                 _err_flag = False
                 ret = []
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '180'))  # 相位
-                self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
+                try:
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '180'))  # 相位
+                    self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
+                except ConnectionError:
+                    self.ConnectError(0)
+                    return False
                 while low <= high and not stop_threads():
+
                     try:
                         self.OnceCyclingStart()
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetFUNCCmd(1, 'PULS'))  # 设置波形为脉冲
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetPULSPerCmd(1, nowTest.get(cmdType.Tp)))  # 周期
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTHighCmd(1, nowTest.get(cmdType.Vh)))  # 高电平
                         self.signalHandler.SendSignalCmd(self.signalHandler.GetVOLTLowCmd(1, str(low)))  # 低电平
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetTRiseCmd(1, nowTest.get(cmdType.Tr)))  # 上升沿
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetTDeclineCmd(1, nowTest.get(cmdType.Td)))  # 下降沿
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetDCYCCmd(1, '50'))  # 占空比
-                        # self.signalHandler.SendSignalCmd(self.signalHandler.GetPHASCmd(1, '180'))  # 相位
                         self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, True))  # 开启通道1
                     except ConnectionError:
                         self.ConnectError(0)
@@ -217,6 +226,7 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                     # 循环次数并判断
                     for _ in range(int(nowTest.get(cmdType.Tn)) - 1):
                         if stop_threads():
+                            wx.CallAfter(self.m_gaugeProcess.SetValue, 0)
                             break
                         if self.recvHandle is not None:
                             pass
@@ -227,7 +237,6 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
                     if not stop_threads():
                         try:
                             self.schedule.enter(float(nowTest.get(cmdType.Tp)), 1, self.OnceCyclingFinished)
-                            # self.schedule.enter(1.0, 1, self.OnceCyclingFinished)
                             self.schedule.run()
                         except ConnectionError:
                             self.ConnectError(0)
@@ -254,6 +263,9 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
                     print('-------finished time:' + str(time.time()))
                     low += step
+                    nowProcessValue += 1
+                    wx.CallAfter(self.m_gaugeProcess.SetValue,
+                                 self.m_gaugeProcess.GetRange() / len(testQueue) * (nowQueue - 1) + nowProcessValue)
 
             elif nowTest.get(cmdType.VariableParamName) == cmdType.Tr:
                 pass
@@ -366,14 +378,17 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             cell_values.append(temp)
 
         nowtime = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        filepath = '.\\log'
         try:
             with open('.\\log\\' + nowtime + '错误结果.txt', 'w', encoding='utf-8', newline='') as f:
                 f.writelines(headers)
                 for errInfo in cell_values:
                     f.writelines(errInfo)
                 print("异常结果保存成功！")
-        except:
-            wx.MessageBox("保存失败！", "警告")
+        except FileNotFoundError:
+            os.mkdir(filepath)
+            self.SaveTestResult()
+            wx.MessageBox("未找到文件夹，已创建文件夹并保存！", "警告")
 
     def StopJudgeThread(self):
         print('JudgeThread has stopped')
@@ -381,20 +396,32 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
 
     def ExitTestThread(self):
         wx.CallAfter(self.SaveTestResult)
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
+        try:
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
+        except ConnectionError:
+            self.ConnectError(0)
         self.stop_threads = True
         self.runHandle = None
+        wx.CallAfter(self.m_gaugeProcess.SetValue, 0)
+        wx.CallAfter(self.m_btnStartTest.Enable)
+        wx.CallAfter(self.m_btnStartTest.SetLabelText, '开始测试')
         # self.recvHandle = None
         print('MainTestThread has stopped')
         self.StopJudgeThread()
 
     def StopThread(self):
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
-        self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
+        try:
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetOUTPUTCmd(1, False))
+            self.signalHandler.SendSignalCmd(self.signalHandler.GetBEEPCmd())
+        except ConnectionError:
+            self.ConnectError(0)
         self.stop_threads = True
         self.runHandle = None
         self.recvHandle = None
+        wx.CallAfter(self.m_gaugeProcess.SetValue, 0)
+        wx.CallAfter(self.m_btnStartTest.Enable)
+        wx.CallAfter(self.m_btnStartTest.SetLabelText, '开始测试')
         print('MainTestThread has stopped')
         self.StopJudgeThread()
 
@@ -409,8 +436,13 @@ class SignalToolMainPanel(GuiSignal.signalToolMainPanel):
             wx.CallAfter(self.m_textSignalAddr.SetValue, "")
         elif type == 1:
             pass
+        self.stop_threads = True
+        self.runHandle = None
+        self.judgeHandle = None
+        wx.CallAfter(self.m_btnStartTest.Enable)
+        wx.CallAfter(self.m_btnStartTest.SetLabelText, '开始测试')
         wx.CallAfter(self.SaveTestResult)
-        wx.MessageBox('已保存目前的测试结果！', '提醒')
+        # wx.MessageBox('已保存目前的测试结果！', '提醒')
 
     def SetRowValue(self, value: list):
         """

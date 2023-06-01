@@ -50,7 +50,7 @@
             <property name="size">500,300</property>
             <property name="style">wxDEFAULT_FRAME_STYLE</property>
             <property name="subclass">; ; forward_declare</property>
-            <property name="title">信号发生器手工复测工具 with WXPYTHON</property>
+            <property name="title">信号发生器手工复测工具 with WXPYTHON v1.0</property>
             <property name="tooltip"></property>
             <property name="two_step_creation">0</property>
             <property name="window_extra_style"></property>
